@@ -1,0 +1,18 @@
+rule get_SRA_reads:
+    input: config["units"]
+    output:
+        ["data/reads/{}".format(x) for x in units["fq1"].dropna().tolist() if x.startswith("SRR")],
+        ["data/reads/{}".format(x) for x in units["fq2"].dropna().tolist() if x.startswith("SRR")]
+    params:
+        module=config["params"]["prefetch"]["module"],
+        ascp=config["params"]["prefetch"]["ascp"] # can truncate further if search for asperaweb_id_dsa.openssh can be automated
+    threads:
+        config["params"]["prefetch"]["threads"]
+    shell: """
+        module load {params.module}
+        ASCP=$(which ascp)
+        OPENSSH=$(echo $ASCP | sed -e 's/\/bin\/ascp/\/etc\/asperaweb_id_dsa.openssh/')
+        cut -f 2 {input} | grep '^SRR' | \
+            xargs prefetch --ascp-path $ASCP'|'$OPENSSH' {params.ascp}
+        parallel -j {threads} fastq-dump --gzip -B --split-files -O data/reads ::: sra/*.sra
+    """

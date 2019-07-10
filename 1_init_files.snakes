@@ -1,0 +1,25 @@
+import os, re
+import pandas as pd
+from Bio import SeqIO
+shell.executable("bash")
+
+configfile: "config.yaml"
+
+units = pd.read_table(config["units"], index_col=["sample", "unit"], dtype=str)
+units.index = units.index.set_levels([i.astype(str) for i in units.index.levels])
+
+rule all:
+    input:
+        config["genome"],
+        config["genome"]+".bwt",
+        config["genome"]+".fai",
+        re.sub("(\.fasta$|\.fa$)", ".dict", config["genome"]),
+        config["intervals"]
+
+include: "rules/init_scaffold_intervals.rules"
+include: "rules/get_genome.rules"
+include: "rules/clean_genomes.rules"
+include: "rules/combine_genomes.rules"
+include: "rules/bwa_index.rules"
+include: "rules/samtools_faidx.rules"
+include: "rules/gatk4_fasta_dict.rules"

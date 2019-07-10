@@ -1,0 +1,19 @@
+# Start freebayes in parallel by chromosome using all input bams for the population as a param
+# Figure out how to write this rule correctly while the rest of the pipeline starts
+
+rule freebayes:
+    input:
+        ref=config["genome"],
+        samples=["data/merged/{}.bam".format(x) for x in units.index.levels[0]]
+    output:
+        "data/calls/{chrom}-calls.vcf"
+    params:
+        config["params"]["freebayes"]
+    threads: 14
+    shell: """
+        freebayes --region {wildcards.chrom} \
+            --fasta-reference {input.ref} \
+            --bam {input.samples} \
+            --vcf {output} \
+            {params}
+        """

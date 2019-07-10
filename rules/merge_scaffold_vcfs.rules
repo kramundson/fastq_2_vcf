@@ -1,0 +1,16 @@
+rule merge_scaffold_vcfs:
+    input:
+        ["data/calls/scaffold/{}-calls.vcf".format(x.rstrip()) for x in open("data/intervals/scaffold_intervals.txt", 'r')]
+    output:
+        "data/calls/all-calls.vcf"
+    log:
+        "logs/cat_scaffold_vcfs.log"
+    params:
+        jarpath=config["params"]["mark_duplicates"]["jarpath"],
+        java_heap=config["params"]["mark_duplicates"]["java_heap"],
+    shell: """
+        java {params.java_heap} -jar {params.jarpath} GatherVcfs \
+            $(echo {input} | sed 's/data/I=data/g') \
+            O={output} \
+            2> {log}
+    """

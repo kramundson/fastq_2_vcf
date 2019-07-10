@@ -1,0 +1,25 @@
+rule freebayes_scaffold:
+    input:
+        ref=config["genome"],
+        # samples=["data/merged/{}.bam".format(x) for x in units.index.levels[0]], # commented out for late indel realign
+        # indexes=["data/merged/{}.bam.bai".format(x) for x in units.index.levels[0]], # commented out for late indel realign
+        intervals=config["intervals"],
+        samples=["data/realigned/{}.bam".format(x) for x in units.index.levels[0]],
+        indexes=["data/realigned/{}.bam.bai".format(x) for x in units.index.levels[0]]
+    output:
+        "data/calls/scaffold/{scaffold}-calls.vcf"
+    params:
+        config["params"]["freebayes"]
+    log: "log/freebayes/{scaffold}.log"
+    shell: """
+        ULTIMATE=$(echo {wildcards.scaffold} | grep -o "_" | wc -l) ;
+        PENULTIMATE=$(($ULTIMATE-1)) ;
+        REGION=$(echo {wildcards.scaffold} | \
+            sed -e "s/_/-/$ULTIMATE" -e "s/_/:/$PENULTIMATE") ;
+        freebayes --region $REGION \
+            --fasta-reference {input.ref} \
+            --bam {input.samples} \
+            --vcf {output} \
+            {params} \
+            2> {log}
+        """

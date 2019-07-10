@@ -1,0 +1,92 @@
+# Run init_genome.snakes before running this Snakefile
+# This Snakefile handles dataset-specific analysis, assuming that reference genome
+# file dependencies and file of output filenames have been made using init_genome.snakes
+
+import os, re
+import pandas as pd
+from Bio import SeqIO
+shell.executable("bash")
+
+configfile: "config.yaml"
+
+units = pd.read_table(config["units"], index_col=["sample", "unit"], dtype=str)
+units.index = units.index.set_levels([i.astype(str) for i in units.index.levels])
+
+# replaces complicated fofn system
+samples = {}
+for i in units.index.levels[0]:
+    samples[i] = ["data/clipOverlap/{}-{}.bam".format(i, j) for j in units.loc[i].index]
+
+def is_single_end(sample,unit):
+    return pd.isnull(units.loc[(sample, unit), "fq2"])
+
+def get_fastq(wildcards):
+    return "data/reads/"+units.loc[(wildcards.sample, wildcards.unit), ["fq1", "fq2"]].dropna()
+
+def get_trimmed(wildcards):
+    if not is_single_end(**wildcards):
+        return expand("data/trimmed/{sample}-{unit}-{group}.fastq.gz",
+            group=[1,2], **wildcards)
+    return "data/trimmed/{sample}-{unit}.fastq.gz".format(**wildcards)
+
+def get_scaffold_intervals(genome):
+    with open(genome) as handle:
+        for record in SeqIO.parse(handle, 'fasta'):
+            start = 1
+            intervals = []
+            
+            if record.id in config["junk_scaffolds"]:
+                while start <= len(record) - 3000000:
+                    # intervals.append("{}_{}_{}".format(record.id, start, start + 2999999)
+                    intervals.append("data/calls/scaffold/{}_{}_{}".format(record.id, start, start+2999999))
+                    start += 3000000
+                
+                # handle last interval
+                # intervals.append("{}_{}_{}".format(record.id, start, len(record))
+                intervals.append("data/calls/scaffold/{}_{}_{}".format(record.id, start, len(record)))
+                
+            else:
+                
+                # divide by 50,000 N scaffold joins, natural breaks in the assembly
+                for match in re.finditer('N{50000}', str(record.seq)):
+                    # intervals.append("{}_{}_{}"format(record.id, start, match.start()))
+                    intervals.append("data/calls/scaffold/{}_{}_{}".format(record.id, start, match.start()))
+                    start = match.end() + 1
+                    
+                # if scaffold wasn't divided by 50000 N, try dividing by 3kb gaps
+                # Prevents from calling variants from chr00 as one chunk.
+                if start == 1:
+                    for match in re.finditer('N{3000,}', str(record.seq)):
+                        # intervals.append("{}_{}_{}\n".format(record.id, start, match.start()))
+                        intervals.append("data/calls/scaffold/{}_{}_{}".format(record.id, start, match.start()))
+                        start = match.end() + 1
+                
+                # handle last interval
+                # intervals.append("{}_{}_{}".format(record.id, start, len(record))
+                intervals.append("data/calls/scaffold/{}_{}_{}".format(record.id, start, len(record)))
+                    
+    return intervals
+
+rule all:
+    input:
+        ["data/realigned/{}.bam".format(x) for x in units.index.levels[0]],
+        "data/calls/all-calls.vcf" # testing
+
+# think about this more: is this the correct order to apply these rules?
+include: "rules/merge_scaffold_vcfs.rules" # rewritten rule for later indel realign
+include: "rules/freebayes_scaffold.rules" # rewritten rule for later indel realign
+# include: "rules/freebayes.rules" # currently in use, removed for testing
+include: "rules/realign_indels.rules" # testing placement at this point in the workflow, rule rewritten
+include: "rules/realigner_target_creator.rules" # testing placement at this point in the workflow, rule rewritten
+include: "rules/samtools_index_pe.rules" # change for later indel realign
+include: "rules/samtools_merge.rules" # change for later indel realign
+include: "rules/clip_overlap.rules" # changed for later indel realign
+# include: "rules/realign_indels.rules" # putting later in the workflow to accommodate pooled clean dihaploids
+# include: "rules/realigner_target_creator.rules" # putting later in the workflow to accommodate pooled clean dihaploids
+include: "rules/filter_good_pairs.rules"
+include: "rules/mark_duplicates.rules"
+include: "rules/align.rules"
+include: "rules/cutadapt_pe.rules"
+include: "rules/cutadapt.rules"
+# include: "rules/init_scaffold_intervals.rules"
+# include: "rules/get_SRA_reads.rules" # broken right now

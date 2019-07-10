@@ -1,0 +1,19 @@
+rule realigner_target_creator:
+    input:
+        ref=config["genome"],
+        dict=re.sub("(\.fasta$|\.fa$)", ".dict", config["genome"]),
+        # bam="data/pairfilt/{sample}-{unit}.bam" 
+        bam="data/merged/{sample}.bam"
+    output:
+        # "data/intervals/{sample}-{unit}.intervals"
+        "data/intervals/{sample}.intervals"
+    log:
+        "logs/gatk3/realigntarget-{sample}.log"
+    shell: """
+        samtools index {input.bam}
+        gatk3 -T RealignerTargetCreator \
+        -R {input.ref} \
+        -I {input.bam} \
+        -o {output} \
+        2> {log}
+    """

@@ -1,0 +1,52 @@
+# path or URL to sequencing unit sheet (TSV format, columns: sample, unit, fq1, fq2)
+# Units are technical replicates (e.g., lanes or resequencing of the same biological
+# sample).
+units: units.tsv
+
+genome: "data/genome/potato_dm_v404_all_pm_un_chloro_mito.fasta"
+
+junk_scaffolds: ["ChrUn"]
+
+organelle_genomes: ["potato_dm_v404_all_pm_un.fasta",
+                    "S_tuberosum_Group_Phureja_chloroplast_DM1-3-516-R44.fasta",
+                    "S_tuberosum_Group_Phureja_mitochondrion_DM1-3-516-R44.fasta"]
+                    
+genomelinks: ["http://solanaceae.plantbiology.msu.edu/data/potato_dm_v404_all_pm_un.fasta.zip",
+              "http://solanaceae.plantbiology.msu.edu/data/S_tuberosum_Group_Phureja_chloroplast_DM1-3-516-R44.fasta.zip",
+              "http://solanaceae.plantbiology.msu.edu/data/S_tuberosum_Group_Phureja_mitochondrion_DM1-3-516-R44.fasta.zip"]
+
+# intervals: "data/intervals/gatk-haplocaller.intervals"
+intervals: "data/intervals/scaffold_intervals.txt"
+
+# sequencing adapter
+adapter: AGATCGGAAGAGC
+
+params:
+
+    prefetch:
+        ascp: "--ascp-path '/share/comailab/kramundson/.aspera/connect/bin/ascp|/home/kramundson/.aspera/connect/etc/asperaweb_id_dsa.openssh' --max-size 50000000000"
+        threads: 4
+
+    cutadapt-pe:
+        qual: "-q 10 -m 40 -j 8"
+        threads: 8
+    
+    cutadapt-se:
+        qual: "-q 10 -m 40"
+        threads: 8
+    
+    align:
+        threads: 12
+        sort_mem: 4G
+    
+    mark_duplicates:
+        jarpath: "/share/comailab/kramundson/miniconda3/envs/gatk-update/share/picard-2.18.27-0/picard.jar"
+        java_heap: "-Xms512m -Xmx4g"
+        opt: "REMOVE_DUPLICATES=true TMP_DIR=./tmp ASSUME_SORT_ORDER=coordinate MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=1000"
+    
+    gatk:
+        jvm: "-Xms512m -Xmx1g XX:ConcGCThreads=1"
+        jar: "/share/comailab/kramundson/miniconda3/envs/ximena/opt/gatk-3.8/GenomeAnalysisTK.jar"
+        threads: 2
+
+    freebayes: "--hwe-priors-off --min-mapping-quality 20 --min-base-quality 20 --genotype-qualities --cnv-map freebayes-cnv-map.bed"

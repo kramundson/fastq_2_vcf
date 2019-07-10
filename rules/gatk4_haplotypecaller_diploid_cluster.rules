@@ -1,0 +1,28 @@
+# -N 1 -n 1 style rule for scattering GATK4 HaplotypeCaller jobs across a cluster
+# Hard coded to process diploid samples according to format in units.tsv
+
+rule gatk4_haplotypecaller_diploid_cluster:
+    input:
+        #bam="data/merged/2x_{sample}.bam",
+        #bai="data/merged/2x_{sample}.bam.bai",
+        bam="data/pairfilt/2x_{sample}.bam",
+        bai="data/pairfilt/2x_{sample}.bam.bai",
+        ref=config["genome"],
+        dict=re.sub("(\.fasta$|\.fa$)", ".dict", config["genome"]),
+        fai=config["genome"]+".fai",
+        intervals="data/intervals/gatk-haplocaller.intervals",
+    output:
+        "data/calls/gatk/2x_{sample}-{region}.g.vcf"
+    threads: config["params"]["gatk_haplotypecaller_diploid"]["threads"]
+    params:
+        config["params"]["gatk_haplotypecaller_diploid"]["opt"]
+    shell:
+        """
+            ULTIMATE=$(echo {wildcards.region} | grep -o '_' | wc -l) ;
+            PENULTIMATE=$(($ULTIMATE-1)) ;
+            REGION=$(echo {wildcards.region} | \
+                sed -e "s/_/-/$ULTIMATE" -e 's/_/:/$PENULTIMATE') ;
+            gatk HaplotypeCaller {params} -R {input.ref} -I {input.bam} \
+                -O {output} -L $REGION
+        """
+

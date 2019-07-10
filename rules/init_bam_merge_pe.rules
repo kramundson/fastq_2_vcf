@@ -1,0 +1,27 @@
+rule init_bam_merge_pe:
+    input:
+        # "units.tsv"
+    output:
+        ["fofn/units-{}.fofn".format(x) for x in units.index.levels[0]]
+    run:
+        samples = {}
+        intervals = []
+        already = os.listdir("fofn")
+        # with open(input[0], "r") as f:
+        with open("units.tsv", 'r') as f:
+            f.readline() # header
+            for line in f:
+                l = line.split('\t')
+                if "fofn/units-{}.fofn".format(l[0]) in already:
+                    continue
+                if l[0] in samples.keys():
+                    samples[l[0]].append("{}-{}".format(l[0],l[1]))
+                else:
+                    samples[l[0]] = ["{}-{}".format(l[0],l[1])]
+        for i in samples.items():
+            # write bam fofns for merging all units within sample
+            # this merge should be done after removal of PCR duplicates
+            o = open("fofn/units-{}.fofn".format(i[0]), 'w')
+            out = ["data/clipOverlap/{}.bam".format(x) for x in i[1]]
+            o.write('\n'.join(out)+'\n')
+            o.close()

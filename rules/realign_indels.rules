@@ -1,0 +1,43 @@
+rule realign_indels:
+    input:
+        ref=config["genome"],
+        dict=re.sub("(\.fasta$|\.fa$)", ".dict", config["genome"]),
+        #bam="data/pairfilt/{sample}-{unit}.bam",
+        #intervals="data/intervals/{sample}-{unit}.intervals"
+        bam="data/merged/{sample}.bam",
+        intervals="data/intervals/{sample}.intervals"
+    output:
+        #"data/realigned/{sample}-{unit}.bam"
+        "data/realigned/{sample}.bam",
+        "data/realigned/{sample}.bam.bai"
+    params:
+        # jvm: "-Xms512m -Xmx1g XX:ConcGCThreads=1"
+        jvm=config['params']['gatk']['jvm'],
+        # jar: "/share/comailab/kramundson/miniconda3/envs/ximena/opt/gatk-3.8/GenomeAnalysisTK.jar"
+        jar=config['params']['gatk']['jar']
+    log:
+        # "logs/realigned/{sample}-{unit}.log"
+        "logs/realigned/{sample}.log"
+    threads: 2
+    shell: """
+        java {params.jvm} -jar {params.jar} \
+            -T IndelRealigner \
+            -R {input.ref} \
+            -I {input.bam} \
+            -targetIntervals {input.intervals} \
+            -o {output[0]} \
+            2> {log}
+        samtools index {output[0]}
+        """
+
+# legacy, does not reduce number of garbage collection threads to JVM, so will use as many as are available on the machine.
+# reducing GC threads was implemented for indel realign of superior dihaploid BAM files.
+#     shell: """
+#         gatk -T IndelRealigner \
+#             -R {input.ref} \
+#             -I {input.bam} \
+#             -targetIntervals {input.intervals} \
+#             -o {output[0]} \
+#             2> {log}
+#         samtools index {output[0]}
+#         """

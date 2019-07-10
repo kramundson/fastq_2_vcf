@@ -1,0 +1,13 @@
+rule repeatmasker:
+    input:
+        config["genome"],
+        config["repbase"]
+    output:
+        config["genome"]+".out.gff",
+        "log/repeatmasker/RM.out"
+    log: "log/repeatmasker/RM.err"
+    threads: config["params"]["repeatmasker"]["threads"]
+    shell: """
+        RepeatMasker -s -x -gff -par {threads} -inv -lib {input[1]} {input[0]} \
+        > {output[1]} 2> {log}
+        """

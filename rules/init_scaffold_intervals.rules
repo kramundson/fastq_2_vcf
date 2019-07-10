@@ -1,0 +1,42 @@
+rule init_scaffold_intervals:
+    input:
+        config["genome"]
+    output:
+        "data/intervals/scaffold_intervals.txt"
+    run:
+        ofh = output[0]
+        o = open(ofh, 'w')
+        with open(input[0]) as handle:
+            for record in SeqIO.parse(handle, 'fasta'):
+                start = 1
+                outputstr = ""
+                
+                if record.id in config["junk_scaffolds"]:
+                
+                    # divide into fixed size chunks of 3Mb
+                    # I'm less concerned about dividing into natural breaks here
+                    while start <= len(record) - 3000000:
+                        outputstr += "{}_{}_{}\n".format(record.id, start, start+2999999)
+                        start += 3000000
+                    
+                    # handle last interval
+                    outputstr += "{}_{}_{}\n".format(record.id, start, len(record))
+                    
+                else:
+                    
+                    # divide by 50,000 N scaffold joins. natural breaks in the assembly
+                    for match in re.finditer('N{50000}', str(record.seq)):
+                        outputstr += "{}_{}_{}\n".format(record.id, start, match.start())
+                        start = match.end() + 1
+    
+                    # if scaffold wasn't divided by 50k N, divide by 3kb gaps
+                    # Prevents HaplotypeCaller from running on entire
+                    # potato chr00 as one chunk
+                    if start == 1:
+                        for match in re.finditer('N{3000,}', str(record.seq)):
+                            outputstr += "{}_{}_{}\n".format(record.id, start, match.start())
+                            start = match.end() + 1
+                            
+                    # handle last nongap interval
+                    outputstr += "{}_{}_{}\n".format(record.id, start, len(record))
+                o.write(outputstr)

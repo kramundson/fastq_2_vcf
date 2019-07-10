@@ -1,8 +1,8 @@
 rule clean_genomes:
     input:
-        "{prefix}.fasta"
+        "data/genome/{prefix}.fasta"
     output:
-        "cleaned_{prefix}.fasta"
+        "data/genome/cleaned_{prefix}.fasta"
     run:
         o = open(output[0], 'w')
         with open(input[0], 'r') as handle:

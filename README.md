@@ -106,7 +106,7 @@ to add more reads from NCBI SRA: SRR2069932, which is reference genotype DM1-3.
 cp units.tsv units.tsv.bak
 
 # add sample info for DM1-3
-printf "2x_DM1_3\tSRR2069932\SRR2069932_1.fastq.gz\tSRR2069932_2.fastq.gz\tmother\n' >> units.tsv
+printf "2x_DM1_3\tSRR2069932\tSRR2069932_1.fastq.gz\tSRR2069932_2.fastq.gz\n" >> units.tsv
 ```
 
 We also need to add the per-sample ploidy to the file ```freebayes-cnv-map.bed```.
@@ -119,6 +119,12 @@ cp freebayes-cnv-map.bed freebayes-cnv-map.bed.bak
 
 # Get rows of a diploid sample, subsitute sample name IVP101 by DM1_3 and append to file
 head -n 14 freebayes-cnv-map.bed.bak | sed -e 's/IVP101/DM1_3/g' >> freebayes-cnv-map.bed
+```
+
+Download a very tiny subset of SRR2069932 reads to subdirectory ```data/reads/```
+
+```
+fastq-dump --gzip -B -N 1000000 -X 1001000 --split-files -O data/reads SRR2069932
 ```
 
 Then, rerun the test workflow:

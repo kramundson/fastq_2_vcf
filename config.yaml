@@ -41,14 +41,14 @@ params:
     
     mark_duplicates:
         # EDIT jarpath IF NOT RUNNING ON A UCD SERVER with access to /share/comailab/
-        jarpath: "/share/comailab/kramundson/miniconda3/envs/gatk-update/share/picard-2.18.27-0/picard.jar"
+        jarpath: "/share/comailab/kramundson/miniconda3/envs/ximena/share/picard-2.18.27-0/picard.jar"
         java_heap: "-Xms512m -Xmx4g"
         opt: "REMOVE_DUPLICATES=true TMP_DIR=./tmp ASSUME_SORT_ORDER=coordinate MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=1000"
     
     gatk:
         # EDIT jar IF NOT RUNNING ON A UCD SERVER with access to /share/comailab/
         jar: "/share/comailab/kramundson/miniconda3/envs/ximena/opt/gatk-3.8/GenomeAnalysisTK.jar"
-        jvm: "-Xms512m -Xmx1g XX:ConcGCThreads=1"
+        jvm: "-Xms512m -Xmx1g -XX:ConcGCThreads=1"
         threads: 2
 
     freebayes: "--hwe-priors-off --min-mapping-quality 20 --min-base-quality 20 --genotype-qualities --cnv-map freebayes-cnv-map.bed"

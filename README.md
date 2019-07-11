@@ -24,11 +24,11 @@ You can and should apply post-hoc quality filters to raw variants according to y
 4. Alignment to reference (bwa mem 0.7.12-r1039)
 5. Remove PCR duplicates (Picard 2.18.27-0)
 6. Filter out pairs w/mates on different chromosomes
-7. Soft clip one mate of an overlapping mate pair (bamUtil)
+7. Soft clip one mate of an overlapping mate pair (bamUtil 1.0.14)
 8. Merge reads by biological sample (samtools 1.9)
 9. Define indel realign targets (GATK 3.8 RealignerTargetCreator)
 10. Realign indels (GATK 3.8 IndelRealigner)
-11. Call variants (freebayes)
+11. Call variants (freebayes 1.2)
 
 ## Software installation
 
@@ -58,11 +58,11 @@ source $HOME/.bashrc
 # TODO: include gatk into environment
 # conda install -c bioconda gatk # then this becomes unnecessary
 
-conda env create --name fq2vcf -f environment.yaml
+conda env create --name fastq2vcf -f environment.yaml
 # follow prompts to finish environment build
 
 # activate environment
-source activate fq2vcf
+source activate fastq2vcf
 ```
 
 4. Install GATK 3.8
@@ -99,7 +99,7 @@ snakemake -s 2_fastq_to_vcf.snakes --cores 8 > test_fq2vcf.out 2> test_fq2vcf.er
 ## How to run with your own datasets
 
 Here, we'll walk through an example of how to add new samples. In this case, we're going
-to add more reads from NCBI SRA: SRR6123031, which is reference genotype DM1-3.
+to add more reads from NCBI SRA: SRR2069932, which is reference genotype DM1-3.
 
 ```
 # make a backup copy of units.tsv just in case
@@ -127,6 +127,8 @@ Then, rerun the test workflow:
 snakemake -s 2_fastq_to_vcf.snakes --cores 8 > test2_fq2vcf.out 2> test2_fq2vcf.err
 ```
 
+The workflow should run without errors and produce the final output file ```data/calls/all-calls.vcf```
+
 To add your own reads that aren't on SRA, put the raw reads (uninterleaved fastq) in the
 folder ```data/reads/```, add your sample to ```freebayes-cnv-map.bed``` and  fill out a
 new row in ```units.tsv``` for each set of paired end reads.
@@ -139,4 +141,6 @@ The columns should be filled out as follows:
 
 ## Other notes
 
-TODO: make a more realistic test case.
+## TODO
+ * make a more realistic test case.
+ * Workflow for GATK4 HaplotypeCaller

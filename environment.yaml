@@ -1,0 +1,29 @@
+name: fastq2vcf
+channels:
+ - conda-forge
+ - bioconda
+ - r
+ - defaults
+dependencies:
+  - bamutil=1.0.14
+  - bedtools=2.27.1
+  - biopython
+  - bwa=0.7.12
+  - cutadapt=1.15
+  - freebayes=1.2.0
+  - gatk=3.8
+  - graphviz=2.38.0
+  - picard=2.18
+  - python=3.6.5
+  - samtools=1.9
+  - sra-tools=2.8.2
+  - snakemake=5.3.0
+  - pyyaml=3.11
+  - pandas=0.20.3
+  - parallel
+  - r-base=3.3.2
+  - r-dplyr=0.7.4
+  - r-ggplot2=2.2.1
+  - r-rlang=0.2.0
+  - seqtk
+  - vcflib

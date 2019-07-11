@@ -35,7 +35,7 @@ You can and should apply post-hoc quality filters to raw variants according to y
 1. Clone this repository
 
 ```
-git clone 
+git clone https://github.com/kramundson/fastq_2_vcf
 ```
 
 2. Install miniconda3
@@ -109,6 +109,18 @@ cp units.tsv units.tsv.bak
 printf "2x_DM1_3\tSRR2069932\SRR2069932_1.fastq.gz\tSRR2069932_2.fastq.gz\tmother\n' >> units.tsv
 ```
 
+We also need to add the per-sample ploidy to the file ```freebayes-cnv-map.bed```.
+Here, I made a backup of the current CNV map, substituted the sample name, and
+appended the modified block to the existing CNV map.
+
+```
+# make a backup copy of freebayes-cnv-map.bed just in case
+cp freebayes-cnv-map.bed freebayes-cnv-map.bed.bak
+
+# Get rows of a diploid sample, subsitute sample name IVP101 by DM1_3 and append to file
+head -n 14 freebayes-cnv-map.bed.bak | sed -e 's/IVP101/DM1_3/g' >> freebayes-cnv-map.bed
+```
+
 Then, rerun the test workflow:
 
 ```
@@ -116,8 +128,9 @@ snakemake -s 2_fastq_to_vcf.snakes --cores 8 > test2_fq2vcf.out 2> test2_fq2vcf.
 ```
 
 To add your own reads that aren't on SRA, put the raw reads (uninterleaved fastq) in the
-folder ```data/reads/``` and  fill out a new row in ```units.tsv``` for each set of paired
-end reads. The columns should be filled out as follows:
+folder ```data/reads/```, add your sample to ```freebayes-cnv-map.bed``` and  fill out a
+new row in ```units.tsv``` for each set of paired end reads.
+The columns should be filled out as follows:
 
  * sample: the biological sample (will be merged with other reads originating from the same biological sample)
  * unit: unique combination of biological sample, sequencing library, flow cell, and lane. Each set of paired end reads should have a unique identifier.
@@ -126,4 +139,4 @@ end reads. The columns should be filled out as follows:
 
 ## Other notes
 
-TODO: find out how to make a more realistic test case.
+TODO: make a more realistic test case.

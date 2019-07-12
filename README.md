@@ -50,6 +50,14 @@ bash Miniconda3-latest-Linux-x86_64.sh
 # yes to placing it in your path
 
 source $HOME/.bashrc
+
+# change location of envs_dirs
+# default is home directory but conda crashes if home folder is not writable
+conda config --add envs_dirs ./.conda/envs
+
+# change location of pkgs_dirs
+# default is home directory but conda crashes if home folder is not writable
+conda config --add pkgs_dirs ./.conda/pkgs
 ```
 
 3. Install dependencies using included file ```environment.yaml```

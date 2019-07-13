@@ -28,7 +28,7 @@ params:
         threads: 4
 
     cutadapt-pe:
-        qual: "-q 10 -m 40 -j 8"
+        qual: "-q 10 -m 40"
         threads: 8
     
     cutadapt-se:
